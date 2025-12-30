@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+*.log
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+
+# IDE/editor
+.vscode/
+.idea/
+.DS_Store
+
+# Django
+staticfiles/
+db.sqlite3
+logcenter/db.sqlite3
+
+# Tests and coverage
+.pytest_cache/
+.coverage
+
+# Build artifacts
+dist/
+build/
