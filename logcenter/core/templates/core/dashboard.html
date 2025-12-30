@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LogCenter Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+<main class="container">
+  <h1>LogCenter</h1>
+  <section>
+    <h3>Total de logs por tipo</h3>
+    <table>
+      <thead><tr><th>Tipo</th><th>Total</th></tr></thead>
+      <tbody>
+      {% for t in totals %}
+        <tr><td>{{ t.type }}</td><td>{{ t.total }}</td></tr>
+      {% empty %}
+        <tr><td colspan="2">Sem dados</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section>
+    <h3>Últimos críticos</h3>
+    <table>
+      <thead><tr><th>Host</th><th>Mensagem</th><th>Data</th></tr></thead>
+      <tbody>
+      {% for e in latest_critical %}
+        <tr><td>{{ e.host }}</td><td>{{ e.message|truncatechars:120 }}</td><td>{{ e.received_at }}</td></tr>
+      {% empty %}
+        <tr><td colspan="3">Sem críticos</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section>
+    <h3>Hosts com mais falhas</h3>
+    <table>
+      <thead><tr><th>Host</th><th>Total</th></tr></thead>
+      <tbody>
+      {% for h in hosts_fail %}
+        <tr><td>{{ h.host }}</td><td>{{ h.total }}</td></tr>
+      {% empty %}
+        <tr><td colspan="2">Sem falhas</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>
+
