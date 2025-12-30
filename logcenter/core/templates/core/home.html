@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LogCenter — Get Started</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+</head>
+<body>
+<main class="container">
+  <h1>LogCenter</h1>
+  <p>Central de ingestão e observabilidade de logs.</p>
+
+  <section>
+    <h3>Get Started</h3>
+    <ul>
+      <li>Defina o token: variável de ambiente <code>LOG_INGEST_TOKEN</code></li>
+      <li>Envie logs para <code>/api/ingest/</code> com header <code>Authorization: Bearer &lt;token&gt;</code></li>
+      <li>Consulte logs em <code>/api/logs/</code> com filtros</li>
+      <li>Documentação em <a href="/api/docs/">/api/docs/</a> e esquema em <a href="/api/schema/">/api/schema/</a></li>
+      <li>Dashboard em <a href="/dashboard/">/dashboard/</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>Autenticação</h3>
+    <p>A API exige autenticação via header <code>Authorization</code> com o esquema Bearer. Utilize o valor configurado em <code>LOG_INGEST_TOKEN</code>.</p>
+    <ul>
+      <li>Header: <code>Authorization: Bearer &lt;LOG_INGEST_TOKEN&gt;</code></li>
+      <li>Endpoints protegidos: <code>/api/ingest/</code> (POST) e <code>/api/logs/</code> (GET)</li>
+      <li>Resposta em caso de falha: <code>401 Unauthorized</code></li>
+      <li>Configuração do token:
+        <ul>
+          <li>Local: arquivo <code>.env</code> com <code>LOG_INGEST_TOKEN=seu-token</code></li>
+          <li>Produção (PythonAnywhere): variável de ambiente no painel</li>
+        </ul>
+      </li>
+    </ul>
+    <h4>Exemplos</h4>
+    <p>Chamada com token válido:</p>
+    <pre><code>curl -X GET http://localhost:8000/api/logs/?limit=10 \
+-H "Authorization: Bearer SEU_TOKEN"</code></pre>
+    <p>Chamada sem token (resulta 401):</p>
+    <pre><code>curl -X GET http://localhost:8000/api/logs/?limit=10</code></pre>
+    <p>Chamada com token inválido (resulta 401):</p>
+    <pre><code>curl -X GET http://localhost:8000/api/logs/?limit=10 \
+-H "Authorization: Bearer TOKEN_INCORRETO"</code></pre>
+    <h4>Referências</h4>
+    <ul>
+      <li>Docs interativas com esquema Bearer em <a href="/api/docs/">/api/docs/</a></li>
+      <li>Configuração do token carregada por <code>.env</code> em <code>settings.py</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>Exemplo de Ingestão</h3>
+    <pre><code>curl -X POST http://localhost:8000/api/ingest/ \
+-H "Authorization: Bearer SEU_TOKEN" \
+-H "Content-Type: application/json" \
+-d "{\"host\":\"localhost\",\"type\":\"error\",\"message\":\"falha\",\"hash\":\"abc123\",\"timestamp\":1735532123.123}"</code></pre>
+  </section>
+
+  <section>
+    <h3>Filtros de Leitura</h3>
+    <p>Parâmetros suportados: <code>host</code>, <code>type</code>, <code>level</code>, <code>since</code>, <code>until</code>, <code>limit</code></p>
+    <pre><code>curl -H "Authorization: Bearer SEU_TOKEN" \
+http://localhost:8000/api/logs/?type=error&amp;limit=20</code></pre>
+  </section>
+</main>
+</body>
+</html>
