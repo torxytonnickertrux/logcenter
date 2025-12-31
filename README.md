@@ -3,8 +3,15 @@
 ## Visão Geral
 - API de ingestão e observabilidade de logs para múltiplos projetos
 - Stack: `Django 4.x`, `Django REST Framework`, `drf-spectacular`, `SQLite`
-- Auth: Header `Authorization: Bearer <LOG_INGEST_TOKEN>`
+- Auth: Header `Authorization: Bearer <token>`
 - Deploy: PythonAnywhere via `WSGI`
+
+## Multi-tenant
+- Cada cliente é um `System` com `slug`, `environment` e `is_active`.
+- Tokens por sistema via `LogIngestToken` (apenas hash armazenado).
+- Autenticação por Bearer identifica o sistema do token.
+- Logs ficam isolados por sistema; leitura só retorna logs do sistema do token.
+- Admin permite gerar e revogar tokens e gerenciar sistemas.
 
 ## Endpoints
 - `POST /api/ingest/` recebe logs remotos
@@ -19,9 +26,11 @@
 {
   "host": "vilksonvtch.pythonanywhere.com",
   "type": "access | error | server",
+  "level": "INFO | WARNING | ERROR | CRITICAL",
   "message": "linha completa do log",
   "hash": "sha256",
-  "timestamp": 1735532123.123
+  "timestamp": 1735532123.123,
+  "context": {}
 }
 ```
 
@@ -33,8 +42,6 @@
 - Criar virtualenv: `python -m venv .venv && .venv\\Scripts\\activate` (Windows)
 - Instalar deps: `pip install -r requirements.txt`
 - Migrar: `python manage.py migrate`
-- Token: definir `LOG_INGEST_TOKEN` no ambiente
-  - Windows PowerShell: `$env:LOG_INGEST_TOKEN = "seu-token"`
 - Rodar: `python manage.py runserver`
 
 ## Deploy PythonAnywhere
@@ -54,12 +61,17 @@
 - `https://<host>/api/docs/`
 - `https://<host>/dashboard/`
 
-## Testes
-- Executar: `python manage.py test`
-- Cobertura mínima:
-  - Token inválido
-  - Log duplicado
+## Testes e Cobertura
+- Executar testes: `python manage.py test -v 2`
+- Cobertura:
+  - `coverage run manage.py test -v 2`
+  - `coverage report -m`
+  - `coverage html`
+- Cobertura alvo: ≥80%
+- Inclui testes de:
+  - Token inválido e revogado
+  - Isolamento por sistema
+  - Duplicados por hash
   - Payload inválido
-  - Alerta disparado
-  - Filtros funcionando
-
+  - Regras de alerta
+  - Serviços e autenticação

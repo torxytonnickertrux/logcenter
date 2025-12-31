@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .serializers import IngestSerializer, LogEntrySerializer
 from .authentication import BearerTokenAuthentication
 from .services import ingest, filter_logs
-from .models import LogEntry
+from .models import LogEntry, System
 
 @method_decorator(csrf_exempt, name="dispatch")
 class IngestView(APIView):
@@ -24,19 +24,25 @@ class IngestView(APIView):
     )
     @method_decorator(csrf_exempt)
     def post(self, request):
+        s = IngestSerializer(data=request.data)
+        if not s.is_valid():
+            return Response({"detail": "invalid payload"}, status=status.HTTP_400_BAD_REQUEST)
         auth = request.headers.get("Authorization") or ""
         prefix = "Bearer "
         if not auth.startswith(prefix):
             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         token = auth[len(prefix):].strip()
-        import os
-        expected = os.environ.get("LOG_INGEST_TOKEN", "dev-token")
-        if token != expected:
+        from hashlib import sha256
+        token_hash = sha256(token.encode("utf-8")).hexdigest()
+        try:
+            from .models import LogIngestToken
+            tok = LogIngestToken.objects.select_related("system").get(token_hash=token_hash)
+        except LogIngestToken.DoesNotExist:
             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-        s = IngestSerializer(data=request.data)
-        if not s.is_valid():
-            return Response({"detail": "invalid payload"}, status=status.HTTP_400_BAD_REQUEST)
-        result, obj = ingest(s.validated_data)
+        if not tok.is_valid():
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        system = tok.system
+        result, obj = ingest(system, s.validated_data)
         if result == "duplicate":
             return Response({"status": "duplicate"})
         return Response({"status": "ok"})
@@ -63,11 +69,17 @@ class LogsView(APIView):
         if not auth.startswith(prefix):
             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
         token = auth[len(prefix):].strip()
-        import os
-        expected = os.environ.get("LOG_INGEST_TOKEN", "dev-token")
-        if token != expected:
+        from hashlib import sha256
+        token_hash = sha256(token.encode("utf-8")).hexdigest()
+        try:
+            from .models import LogIngestToken
+            tok = LogIngestToken.objects.select_related("system").get(token_hash=token_hash)
+        except LogIngestToken.DoesNotExist:
             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-        qs = filter_logs(request.query_params)
+        if not tok.is_valid():
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        system = tok.system
+        qs = filter_logs(system, request.query_params)
         return Response(LogEntrySerializer(qs, many=True).data)
 
 class HealthView(APIView):
@@ -79,10 +91,13 @@ class DashboardOverviewView(TemplateView):
     template_name = "core/dashboard.html"
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        totals = LogEntry.objects.values("type").annotate(total=Count("id")).order_by()
+        totals = LogEntry.objects.values("system__slug", "level").annotate(total=Count("id")).order_by()
         latest_critical = LogEntry.objects.filter(level=LogEntry.LEVEL_CRITICAL).order_by("-received_at")[:10]
-        hosts_fail = LogEntry.objects.filter(level__in=[LogEntry.LEVEL_ERROR, LogEntry.LEVEL_CRITICAL]).values("host").annotate(total=Count("id")).order_by("-total")[:10]
+        hosts_fail = LogEntry.objects.filter(level__in=[LogEntry.LEVEL_ERROR, LogEntry.LEVEL_CRITICAL]).values("system__slug", "host").annotate(total=Count("id")).order_by("-total")[:10]
         ctx["totals"] = list(totals)
         ctx["latest_critical"] = latest_critical
         ctx["hosts_fail"] = list(hosts_fail)
         return ctx
+
+class HomeView(TemplateView):
+    template_name = "core/home.html"

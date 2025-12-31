@@ -10,14 +10,14 @@
 <main class="container">
   <h1>LogCenter</h1>
   <section>
-    <h3>Total de logs por tipo</h3>
+    <h3>Total de logs por sistema e nível</h3>
     <table>
-      <thead><tr><th>Tipo</th><th>Total</th></tr></thead>
+      <thead><tr><th>Sistema</th><th>Nível</th><th>Total</th></tr></thead>
       <tbody>
       {% for t in totals %}
-        <tr><td>{{ t.type }}</td><td>{{ t.total }}</td></tr>
+        <tr><td>{{ t.system__slug }}</td><td>{{ t.level }}</td><td>{{ t.total }}</td></tr>
       {% empty %}
-        <tr><td colspan="2">Sem dados</td></tr>
+        <tr><td colspan="3">Sem dados</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -38,12 +38,12 @@
   <section>
     <h3>Hosts com mais falhas</h3>
     <table>
-      <thead><tr><th>Host</th><th>Total</th></tr></thead>
+      <thead><tr><th>Sistema</th><th>Host</th><th>Total</th></tr></thead>
       <tbody>
       {% for h in hosts_fail %}
-        <tr><td>{{ h.host }}</td><td>{{ h.total }}</td></tr>
+        <tr><td>{{ h.system__slug }}</td><td>{{ h.host }}</td><td>{{ h.total }}</td></tr>
       {% empty %}
-        <tr><td colspan="2">Sem falhas</td></tr>
+        <tr><td colspan="3">Sem falhas</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -51,4 +51,3 @@
 </main>
 </body>
 </html>
-

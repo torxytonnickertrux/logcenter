@@ -1,0 +1,12 @@
+[run]
+branch = True
+source = logcenter
+omit =
+    */migrations/*
+    */tests/*
+    logcenter/logcenter/settings.py
+    logcenter/logcenter/wsgi.py
+
+[report]
+show_missing = True
+skip_covered = True
