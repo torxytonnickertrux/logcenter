@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "django_filters",
-    "logcenter.core",
+    "logcenter.core.apps.CoreConfig",
 ]
 
 MIDDLEWARE = [
